@@ -11,7 +11,7 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    err = watcher.Watch("/Users/austenlacy/Desktop/tmp")
+    err = watcher.Watch("/tmp")
     if err != nil {
         log.Fatal(err)
     }
