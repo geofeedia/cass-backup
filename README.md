@@ -13,7 +13,11 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * Should upload full and incremental snapshot files
 
 
+Default event listened to is `syscall.IN_MOVED_TO`.
+
+
 #### Expected environment variables
 ```no-highlight
-BUCKET_NAME='some_s3_or_gcs_bucket'
+BUCKET_NAME=some_s3_or_gcs_bucket
+REGION=us-east1   # only used for amazon, ignored for google. defaults to 'us-east1'
 ```
