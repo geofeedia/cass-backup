@@ -12,3 +12,8 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * Use cloud SDK to support multi-part uploads for reliability of uploading large files
 * Should upload full and incremental snapshot files
 
+
+#### Expected environment variables
+```no-highlight
+BUCKET_NAME='some_s3_or_gcs_bucket'
+```
