@@ -36,10 +36,9 @@ func main() {
         // log.Fatal("Unable to determine cloud provider. Currently only check for GCE and AWS.")
     }
 
-
     // setup watcher to begin watching inotify system events
     // the ... allows for recursive subdirectories
-    dirsToWatch := []string{"/home/parallels/Desktop/..."}
+    dirsToWatch := []string{"/data/..."}
     events := []notify.Event{ notify.InMovedTo }
     watchChan := make(chan notify.EventInfo, 1)
     setupWatcher(watchChan, dirsToWatch, events)
@@ -56,9 +55,9 @@ func main() {
         if inAws == true {
             uploadToS3(evt.Path(), metaData)
         } else if inGce == true {
-            // upload to GCS
+            uploadToGcs(evt.Path(), metaData)
         } else {
-            //log.Fatal("Unrecognized cloud. Did not upload to either GCS or S3.")
+            log.Fatal("Unrecognized cloud. Did not upload to either GCS or S3.")
         }
 
         log.Println("Path: ", evt.Path())
