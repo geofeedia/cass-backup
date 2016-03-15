@@ -14,10 +14,12 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 
 Currently only supports Linux inotify events.
 
-Default event listened to is `syscall.IN_MOVED_TO`.
+Default event listened to is `syscall.IN_MOVED_TO`
+
+The key will be in the form of `<machine_hostname>-<instance_id>/path/to/upload/file`
 
 #### Expected environment variables
 ```no-highlight
-BUCKET_NAME=some_s3_or_gcs_bucket    # assumes the bucket is already exists. does not currently create it.
-REGION=us-east1   # only used for amazon, ignored for google. defaults to 'us-east-1'
+BUCKET_NAME=some_bucket    # assumes the bucket already exists and does not currently create it if not.
+REGION=us-east1   					 # only used for amazon, ignored for google. defaults to 'us-east-1'
 ```

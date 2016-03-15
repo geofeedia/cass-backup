@@ -48,6 +48,11 @@ func main() {
     for {
         evt := <-watchChan
 
+        // only upload *.db files
+        if filepath.Ext(evt.Path()) != ".db" { 
+            continue
+        }
+
         if inAws == true {
             uploadToS3(evt.Path(), metaData)
         } else if inGce == true {
