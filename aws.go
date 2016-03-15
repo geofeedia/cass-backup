@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"bufio"
-	"path/filepath"
 
     "github.com/aws/aws-sdk-go/aws"
 	awssession "github.com/aws/aws-sdk-go/aws/session"
@@ -22,7 +21,7 @@ const (
  * 
  * @param  { string } filePath - The path to the file to upload
  */
-func uploadToS3(filePath string) {
+func uploadToS3(filePath string, metaData *CommonMetadata) {
 	var bucket = os.Getenv(BUCKET_ENV_VAR)
     if bucket == "" {
         log.Fatal("Unable to determine bucket name. Make sure BUCKET_NAME environment variable is set.")
@@ -43,11 +42,17 @@ func uploadToS3(filePath string) {
     	log.Fatal(fileIoErr)
     }
 
+    // sanitize path to remove /data from filepath for upload
+    sanitizedPath := filePath[5:len(filePath)]
+
+    // the SDK relies on IAM credentials
+    // S3 upload manager uploads large file in smaller
+    // parts and in parallel.
 	uploader := s3manager.NewUploader(awssession.New(&aws.Config{Region: aws.String(region)}))
-	result, err := uploader.Upload(&s3manager.UploadInput{	
+	result, err := uploader.Upload(&s3manager.UploadInput{
 		Body: bufio.NewReader(f),
 		Bucket: aws.String(bucket),
-		Key: aws.String(filepath.Base(filePath)),
+		Key: aws.String(metaData.hostname + metaData.instance_id + sanitizedPath),
 	})
 
 	f.Close()

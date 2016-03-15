@@ -9,8 +9,9 @@ import (
 )
 
 var (
-    inAws  bool   = false
-    inGce  bool   = false
+    inAws  bool = false
+    inGce  bool = false
+    metaData    = new(CommonMetadata)
 )
 
 func main() {
@@ -23,13 +24,15 @@ func main() {
     case cmdd := <-channel:
         if cmdd.cloud == "aws" {
             inAws = true
+            metaData = cmdd
         } else if cmdd.cloud == "gce" {
             inGce = true
+            metaData = cmdd
         } else {
             log.Fatal("Unsupported cloud provider. Currently only checking for GCE and AWS.")
         }
     case <-time.After(time.Second * 1):
-        log.Println("Unable to determine cloud provider. Currently only check for GCE and AWS.")
+        log.Println("Unable to determine cloud provider. Currently only checking for GCE and AWS.")
         // log.Fatal("Unable to determine cloud provider. Currently only check for GCE and AWS.")
     }
 
@@ -44,6 +47,15 @@ func main() {
 
     for {
         evt := <-watchChan
+
+        if inAws == true {
+            uploadToS3(evt.Path(), metaData)
+        } else if inGce == true {
+            // upload to GCS
+        } else {
+            //log.Fatal("Unrecognized cloud. Did not upload to either GCS or S3.")
+        }
+
         log.Println("Path: ", evt.Path())
         log.Println("File: ", filepath.Base(evt.Path()))
     }
