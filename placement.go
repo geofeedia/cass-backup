@@ -1,7 +1,7 @@
 package main
 
 
-import(
+import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"

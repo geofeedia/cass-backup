@@ -12,12 +12,12 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * Use cloud SDK to support multi-part uploads for reliability of uploading large files
 * Should upload full and incremental snapshot files
 
+Currently only supports Linux inotify events.
 
 Default event listened to is `syscall.IN_MOVED_TO`.
-
 
 #### Expected environment variables
 ```no-highlight
 BUCKET_NAME=some_s3_or_gcs_bucket
-REGION=us-east1   # only used for amazon, ignored for google. defaults to 'us-east1'
+REGION=us-east1   # only used for amazon, ignored for google. defaults to 'us-east-1'
 ```

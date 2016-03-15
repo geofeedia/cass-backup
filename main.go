@@ -1,39 +1,19 @@
 package main
 
-import(
+import (
     "log"
-    "os"
     "time"
+    "path/filepath"
     
     "github.com/rjeczalik/notify"
 )
 
 var (
-        inAws  bool   = false
-        inGce  bool   = false
-        bucket string = ""
-        region string = ""
-    )
-
-const (
-    BUCKET_ENV_VAR = "BUCKET_NAME"
-    REGION_ENV_VAR = "REGION"
+    inAws  bool   = false
+    inGce  bool   = false
 )
 
 func main() {
-    bucket = os.Getenv(BUCKET_ENV_VAR)
-    if bucket == "" {
-        log.Fatal("Unable to determine bucket name. Make sure BUCKET_NAME environment variable is set.")
-    }
-    log.Println("Target bucket: ", bucket)
-
-    region = os.Getenv(REGION_ENV_VAR)
-    if region == "" {
-        // default to us-east1 for amazon. google doesn't use the region
-        region = "us-east1"
-    }
-    log.Println("Target region: ", region)
-
     // determine which cloud we are in
     channel := make(chan *CommonMetadata, 1)
     go introspectGCE(channel)
@@ -46,7 +26,7 @@ func main() {
         } else if cmdd.cloud == "gce" {
             inGce = true
         } else {
-            log.Fatal("Unsupported cloud provider. Currently only check for GCE and AWS.")
+            log.Fatal("Unsupported cloud provider. Currently only checking for GCE and AWS.")
         }
     case <-time.After(time.Second * 1):
         log.Println("Unable to determine cloud provider. Currently only check for GCE and AWS.")
@@ -55,7 +35,8 @@ func main() {
 
 
     // setup watcher to begin watching inotify system events
-    dirsToWatch := []string{"/tmp/..."}
+    // the ... allows for recursive subdirectories
+    dirsToWatch := []string{"/home/parallels/Desktop/..."}
     events := []notify.Event{ notify.InMovedTo }
     watchChan := make(chan notify.EventInfo, 1)
     setupWatcher(watchChan, dirsToWatch, events)
@@ -63,15 +44,16 @@ func main() {
 
     for {
         evt := <-watchChan
-        log.Println("Event: ", evt)
+        log.Println("Path: ", evt.Path())
+        log.Println("File: ", filepath.Base(evt.Path()))
     }
 }
 
 /**
  * Sets up a notify watcher to watch specified files.
- * @param { chan<- *notify.EventInfo } - channel you wish to listen on
- * @param { []string } - list of directories you wish to watch
- * @param { []Event  } - list of events you wish to listen on
+ * @param { chan<- notify.EventInfo } - channel you wish to listen on
+ * @param { []string }                - list of directories you wish to watch
+ * @param { []Event  }                - list of events you wish to listen on
  */
 func setupWatcher(channel chan<- notify.EventInfo, dirsToWatch []string, events []notify.Event) {
     for i := 0; i < len(dirsToWatch); i++ {
