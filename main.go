@@ -9,9 +9,9 @@ import (
 )
 
 var (
-    inAws  bool = false
-    inGce  bool = false
-    metaData    = new(CommonMetadata)
+    inAws    = false
+    inGce    = false
+    metaData = new(CommonMetadata)
 )
 
 func main() {
