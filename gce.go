@@ -44,7 +44,7 @@ func uploadToGcs(filePath string, metaData *CommonMetadata) {
 
     // object name is in the format of: <machine_hostname>-<instance_id>/path/to/upload/file
     obj := &storage.Object{
-    	Name: metaData.hostname + "-" + metaData.instance_id + "/" + sanitizedPath,
+    	Name: metaData.hostname + "-" + metaData.instance_id + sanitizedPath,
     }
 
     // SDK should use the Google service account for auth creds

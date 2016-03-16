@@ -39,7 +39,7 @@ func uploadToS3(filePath string, metaData *CommonMetadata) {
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Body: bufio.NewReader(file),
 		Bucket: aws.String(bucket),
-		Key: aws.String(metaData.hostname + "-" + metaData.instance_id + "/" + sanitizedPath),
+		Key: aws.String(metaData.hostname + "-" + metaData.instance_id + sanitizedPath),
 	})
 
 	if err != nil {
