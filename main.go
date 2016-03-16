@@ -32,8 +32,7 @@ func main() {
             log.Fatal("Unsupported cloud provider. Currently only checking for GCE and AWS.")
         }
     case <-time.After(time.Second * 1):
-        log.Println("Unable to determine cloud provider. Currently only checking for GCE and AWS.")
-        // log.Fatal("Unable to determine cloud provider. Currently only check for GCE and AWS.")
+        log.Fatal("Unable to determine cloud provider. Currently only checking for GCE and AWS.")
     }
 
     // setup watcher to begin watching inotify system events
