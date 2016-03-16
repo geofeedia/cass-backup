@@ -10,7 +10,7 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * ~~Use IAM creds to get permissions on the upload bucket~~
 * ~~Listen for FS events for triggering uploads (inotify on Linux)~~
 * ~~Use cloud SDK to support multi-part uploads for reliability of uploading large files~~
-* Should upload full and incremental snapshot files
+* ~~Should upload full and incremental snapshot files~~
 
 Currently only supports Linux inotify events.
 
@@ -22,4 +22,14 @@ The key will be in the form of `<machine_hostname>-<instance_id>/path/to/upload/
 ```no-highlight
 BUCKET_NAME=some_bucket    # assumes the bucket already exists and does not currently create it if not.
 REGION=us-east1   					 # only used for amazon, ignored for google. defaults to 'us-east-1'
+```
+
+To build you can use the Makefile or just use the `go install` command.
+
+##### Makefile
+```bash
+# will output binary in project folder as `cass-backup`
+$ make
+...
+$ ./cass-backup
 ```
