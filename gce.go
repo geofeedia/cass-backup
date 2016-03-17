@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/net/context"
     "golang.org/x/oauth2/google"	
@@ -39,6 +40,8 @@ func uploadToGcs(filePath string, metaData *CommonMetadata) {
 		log.Fatal(err)
 	}
 
+    log.Printf("File: %s\n", filepath.Base(filePath))
+
 	// sanitize path to remove initial `/data` from filepath for upload
     sanitizedPath := filePath[5:len(filePath)]
 
@@ -53,7 +56,7 @@ func uploadToGcs(filePath string, metaData *CommonMetadata) {
 	if err != nil {
 		log.Printf("Error encountered. Unable to upload to GCS... ", err)
 	} else {
-		log.Printf("Successfully uploaded object %v to GCS at location %v\n\n", result.Name, result.SelfLink)
+		log.Printf("Successfully uploaded object:\n %v\n to GCS at location:\n %v\n\n", result.Name, result.SelfLink)
 	}
 	file.Close()
 }

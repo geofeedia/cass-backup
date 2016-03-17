@@ -40,3 +40,17 @@ func getBucket() string {
     log.Println("Target bucket: ", bucket)
     return bucket
 }
+
+/**
+ * Determines if path is to a file or a directory.
+ * If unable to locate path (i.e. it's been deleted, then we return true)
+ */
+func isDirectory(path string) bool {
+    fileInfo, err := os.Stat(path)
+    if err != nil {
+        log.Printf("Unable to determine if path to file or directory exists: %s", path)
+        return true
+    }
+
+    return fileInfo.IsDir()
+}

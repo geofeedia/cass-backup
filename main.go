@@ -3,14 +3,12 @@ package main
 import (
     "log"
     "time"
-    "path/filepath"
+    "syscall"
     
     "github.com/rjeczalik/notify"
 )
 
 var (
-    inAws    = false
-    inGce    = false
     metaData = new(CommonMetadata)
 )
 
@@ -22,45 +20,59 @@ func main() {
 
     select {
     case cmdd := <-channel:
-        if cmdd.cloud == "aws" {
-            inAws = true
-            metaData = cmdd
-        } else if cmdd.cloud == "gce" {
-            inGce = true
-            metaData = cmdd
-        } else {
-            log.Fatal("Unsupported cloud provider. Currently only checking for GCE and AWS.")
-        }
-    case <-time.After(time.Second * 1):
+        metaData = cmdd 
+    case <-time.After(time.Second * 2):
         log.Fatal("Unable to determine cloud provider. Currently only checking for GCE and AWS.")
     }
 
     // setup watcher to begin watching inotify system events
     // the ... allows for recursive subdirectories
-    dirsToWatch := []string{"/data/..."}
-    events := []notify.Event{ notify.InMovedTo }
-    watchChan := make(chan notify.EventInfo, 1)
+    var dirsToWatch = []string{"/data/..."}
+    var events = []notify.Event{ 
+        notify.InCreate,
+        notify.InMovedTo,
+        notify.InCloseWrite,
+        notify.InDelete,
+        notify.InDeleteSelf,
+    }
+
+    // we use two channels here. 1 for the watch events
+    // and 1 for the upload events which should only get
+    // pumped with events that we know we want to upload.
+    var watchChan  = make(chan notify.EventInfo, 10000)
+    var uploadChan = make(chan notify.EventInfo, 10000)
+
     setupWatcher(watchChan, dirsToWatch, events)
     defer notify.Stop(watchChan)
+
+    // start 2 concurrent upload workers to listen
+    // on same channel
+    go upload(uploadChan, metaData)
+    go upload(uploadChan, metaData)
 
     for {
         evt := <-watchChan
 
-        // only upload *.db files
-        if filepath.Ext(evt.Path()) != ".db" { 
+        // if we receive a delete event, we need to stop that watcher 
+        // and recreate watchers to avoid any leaks
+        var mask = evt.Sys().(*syscall.InotifyEvent).Mask
+
+        // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
+        if  mask == 512 || mask == 1024 {
+            // stop removes any watchers
+            notify.Stop(watchChan)
+            setupWatcher(watchChan, dirsToWatch, events)
             continue
         }
 
-        if inAws == true {
-            uploadToS3(evt.Path(), metaData)
-        } else if inGce == true {
-            uploadToGcs(evt.Path(), metaData)
-        } else {
-            log.Fatal("Unrecognized cloud. Did not upload to either GCS or S3.")
+        // only upload files
+        if isDirectory(evt.Path()) == true { 
+            continue
         }
 
-        log.Println("Path: ", evt.Path())
-        log.Println("File: ", filepath.Base(evt.Path()))
+        // pump events we want to upload to the 
+        // upload channel
+        uploadChan <- evt
     }
 }
 
@@ -84,6 +96,26 @@ func setupWatcher(channel chan<- notify.EventInfo, dirsToWatch []string, events 
                 log.Println("Unable to watch directory at ", dirsToWatch[i])
                 log.Fatal(err)
             }
+        }
+    }
+}
+
+/**
+ * Handles upload to either S3 or GCS as indicated by available cloud metadata.
+ * @param  { <-chan notify.EventInfo } - the upload channel we are listening on
+ * @param  { *CommonMetadata         } - the cloud instance metadata
+ */
+func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
+    for {
+        // listen for events that we need to upload
+        // and block when necessary
+        evt := <-channel
+        if metaData.cloud == "aws" {
+            uploadToS3(evt.Path(), metaData)
+        } else if metaData.cloud == "gce" {
+            uploadToGcs(evt.Path(), metaData)
+        } else {
+            log.Fatal("Unsupported cloud provider. Currently only checking for GCE and AWS.")
         }
     }
 }

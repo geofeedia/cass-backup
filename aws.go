@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"bufio"
 
     "github.com/aws/aws-sdk-go/aws"
@@ -28,6 +29,9 @@ func uploadToS3(filePath string, metaData *CommonMetadata) {
     	log.Fatal(err)
     }
 
+    log.Printf("File: %s\n", filepath.Base(filePath))
+
+
     // sanitize path to remove initial `/data` from filepath for upload
     sanitizedPath := filePath[5:len(filePath)]
 
@@ -45,7 +49,7 @@ func uploadToS3(filePath string, metaData *CommonMetadata) {
 	if err != nil {
 		log.Println("Error encountered. Unable to upload to S3... ", err)
 	} else {
-		log.Println("Successfully uploaded to S3 at the following location %v", result.Location)
+		log.Printf("Successfully uploaded to S3 at the following location:\n %v", result.Location)
 	}
 	file.Close()
 }
