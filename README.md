@@ -12,7 +12,7 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * ~~Use cloud SDK to support multi-part uploads for reliability of uploading large files~~
 * ~~Should upload full and incremental snapshot files~~
 
-Currently only supports Linux inotify events.
+Currently only supports Linux inotify event at the `/data/` directory and subdirectories recursively.
 
 Currently listening on `syscall.IN_MOVED_TO, syscall.IN_CLOSE_WRITE, syscall.IN_DELETE, syscall.IN_DELETE_SELF`
 
