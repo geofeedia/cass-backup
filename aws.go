@@ -1,14 +1,14 @@
 package main
 
 import (
-	"log"
-	"os"
-	"path/filepath"
-	"bufio"
+    "log"
+    "os"
+    "path/filepath"
+    "bufio"
 
     "github.com/aws/aws-sdk-go/aws"
-	awssession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+    awssession "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 
@@ -20,13 +20,13 @@ import (
  * @param  { *CommonMetadata } metaData - The instance metadata
  */
 func uploadToS3(filePath string, metaData *CommonMetadata) {
-	var bucket = getBucket()
-	var region = getRegion()
+    var bucket = getBucket()
+    var region = getRegion()
 
     file, err := os.Open(filePath); 
     if err != nil {
-    	log.Printf("Error reading file at: ", filePath)
-    	log.Fatal(err)
+        log.Printf("Error reading file at: ", filePath)
+        log.Fatal(err)
     }
 
     log.Printf("File: %s\n", filepath.Base(filePath))
@@ -39,17 +39,17 @@ func uploadToS3(filePath string, metaData *CommonMetadata) {
     // S3 upload manager uploads large file in smaller
     // parts and in parallel.
     // key is in format of: <machine_hostname>-<instance_id>/path/to/upload/file
-	uploader := s3manager.NewUploader(awssession.New(&aws.Config{Region: aws.String(region)}))
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Body: bufio.NewReader(file),
-		Bucket: aws.String(bucket),
-		Key: aws.String(metaData.hostname + "-" + metaData.instance_id + sanitizedPath),
-	})
+    uploader := s3manager.NewUploader(awssession.New(&aws.Config{Region: aws.String(region)}))
+    result, err := uploader.Upload(&s3manager.UploadInput{
+        Body: bufio.NewReader(file),
+        Bucket: aws.String(bucket),
+        Key: aws.String(metaData.hostname + "-" + metaData.instance_id + sanitizedPath),
+    })
 
-	if err != nil {
-		log.Println("Error encountered. Unable to upload to S3... ", err)
-	} else {
-		log.Printf("Successfully uploaded to S3 at the following location:\n %v", result.Location)
-	}
-	file.Close()
+    if err != nil {
+        log.Println("Error encountered. Unable to upload to S3... ", err)
+    } else {
+        log.Printf("Successfully uploaded to S3 at the following location:\n %v", result.Location)
+    }
+    file.Close()
 }
