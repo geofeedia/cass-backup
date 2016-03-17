@@ -12,7 +12,7 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 * ~~Use cloud SDK to support multi-part uploads for reliability of uploading large files~~
 * ~~Should upload full and incremental snapshot files~~
 
-Currently only supports Linux inotify event at the `/data/` directory and subdirectories recursively.
+Currently only supports Linux inotify events at the `/data` directory and all subdirectories recursively.
 
 Currently listening on `syscall.IN_MOVED_TO, syscall.IN_CLOSE_WRITE, syscall.IN_DELETE, syscall.IN_DELETE_SELF`
 
@@ -23,7 +23,7 @@ The key will be in the form of `<machine_hostname>-<instance_id>/path/to/upload/
 #### Expected environment variables
 ```no-highlight
 BUCKET_NAME=some_bucket    # assumes the bucket already exists and does not currently create it if not.
-REGION=us-east1   					 # only used for amazon, ignored for google. defaults to 'us-east-1'
+REGION=us-east1   		   # only used for amazon, ignored for google. defaults to 'us-east-1'
 ```
 
 To build you can use the Makefile or just use the `go install` command.
