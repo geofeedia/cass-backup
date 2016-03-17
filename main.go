@@ -4,6 +4,8 @@ import (
     "log"
     "time"
     "syscall"
+    "path"
+    "path/filepath"
     
     "github.com/rjeczalik/notify"
 )
@@ -56,7 +58,6 @@ func main() {
         // if we receive a delete event, we need to stop that watcher 
         // and recreate watchers to avoid any leaks
         var mask = evt.Sys().(*syscall.InotifyEvent).Mask
-
         // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
         if  mask == 512 || mask == 1024 {
             // stop removes any watchers
@@ -65,8 +66,21 @@ func main() {
             continue
         }
 
+        var fpath = evt.Path()
+
         // only upload files
-        if isDirectory(evt.Path()) == true { 
+        if isDirectory(fpath) == true { 
+            continue
+        }
+
+        // don't upload files in main table directory aka
+        // working directory files. 
+        // we only want /data/keyspace/.../table/backups and /data/keyspace/.../table/snapshots
+        // 
+        // filepath.Dir strips the file off the path and
+        // path.Base returns the last directory
+        lastDir := path.Base(filepath.Dir(fpath))
+        if lastDir != "snapshot" || lastDir != "backups" {
             continue
         }
 
