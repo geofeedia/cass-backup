@@ -3,6 +3,8 @@ package main
 import (
     "log"
     "os"
+    "path"
+    "path/filepath"
 )
 
 const (
@@ -44,6 +46,7 @@ func getBucket() string {
 /**
  * Determines if path is to a file or a directory.
  * If unable to locate path (i.e. it's been deleted, then we return true)
+ * @param { string }  - the file path
  */
 func isDirectory(path string) bool {
     fileInfo, err := os.Stat(path)
@@ -53,4 +56,25 @@ func isDirectory(path string) bool {
     }
 
     return fileInfo.IsDir()
+}
+
+/**
+ * Recursively determines if the path contains a 'snapshots' or
+ * 'backups' directory in it.
+ * @param { string }  - the file path
+ */
+func isInSnapshotOrBackup(fpath string) bool {
+    fpath = filepath.Dir(fpath)
+
+    fpathBase := path.Base(fpath)
+
+    if fpathBase == "." {
+        return false
+    }
+
+    if fpathBase == "snapshots" || fpathBase == "backups" {
+        return true
+    }
+
+    return isInSnapshotOrBackup(fpath)
 }

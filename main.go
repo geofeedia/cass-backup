@@ -4,8 +4,6 @@ import (
     "log"
     "time"
     "syscall"
-    "path"
-    "path/filepath"
     
     "github.com/rjeczalik/notify"
 )
@@ -33,7 +31,6 @@ func main() {
     var events = []notify.Event{ 
         notify.InCreate,
         notify.InMovedTo,
-        notify.InCloseWrite,
         notify.InDelete,
         notify.InDeleteSelf,
     }
@@ -74,19 +71,16 @@ func main() {
         }
 
         // don't upload files in main table directory aka
-        // working directory files. 
-        // we only want /data/keyspace/.../table/backups and /data/keyspace/.../table/snapshots
+        // working directory files.
+        // we only want /data/keyspace/**/table/backups/* and /data/keyspace/**/table/snapshots/*
         // 
         // filepath.Dir strips the file off the path and
         // path.Base returns the last directory
-        lastDir := path.Base(filepath.Dir(fpath))
-        if lastDir != "snapshot" || lastDir != "backups" {
-            continue
+        if isInSnapshotOrBackup(fpath) == true {
+            // pump events we want to upload to the 
+            // upload channel
+            uploadChan <- evt    
         }
-
-        // pump events we want to upload to the 
-        // upload channel
-        uploadChan <- evt
     }
 }
 

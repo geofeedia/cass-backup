@@ -14,7 +14,7 @@ Inspired heavily by https://github.com/JeremyGrosser/tablesnap.
 
 Currently only supports Linux inotify events at the `/data` directory and all subdirectories recursively.
 
-Currently listening on `syscall.IN_MOVED_TO, syscall.IN_CLOSE_WRITE, syscall.IN_DELETE, syscall.IN_DELETE_SELF`
+Currently listening on `syscall.IN_MOVED_TO, syscall.IN_DELETE, syscall.IN_DELETE_SELF`
 
 The DELETE events are for removing watchers for when snapshots and backups are cleaned up.
 
