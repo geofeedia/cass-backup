@@ -1,17 +1,17 @@
 package main
 
 import (
-	"log"
-	"os"
-	"path/filepath"
+    "log"
+    "os"
+    "path/filepath"
 
-	"golang.org/x/net/context"
-    "golang.org/x/oauth2/google"	
-	storage "google.golang.org/api/storage/v1"
+    "golang.org/x/net/context"
+    "golang.org/x/oauth2/google"    
+    storage "google.golang.org/api/storage/v1"
 )
 
 const (
-	scope = storage.DevstorageFullControlScope
+    scope = storage.DevstorageFullControlScope
 )
 
 /**
@@ -22,41 +22,41 @@ const (
  * @param  { *CommonMetadata } metaData - The instance metadata
  */
 func uploadToGcs(filePath string, metaData *CommonMetadata) {
-	var bucket = getBucket()
+    var bucket = getBucket()
 
-	client, err := google.DefaultClient(context.Background(), scope)
-	if err != nil {
-		log.Fatal("Unable to establish default client for GCE.")
-	}
+    client, err := google.DefaultClient(context.Background(), scope)
+    if err != nil {
+        log.Fatal("Unable to establish default client for GCE.")
+    }
 
-	service, err := storage.New(client)
-	if err != nil {
-		log.Fatal("Unable to create storage service.")
-	}
+    service, err := storage.New(client)
+    if err != nil {
+        log.Fatal("Unable to create storage service.")
+    }
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Printf("Error reading file at: ", filePath)
-		log.Fatal(err)
-	}
+    file, err := os.Open(filePath)
+    if err != nil {
+        log.Printf("Error reading file at: ", filePath)
+        log.Fatal(err)
+    }
 
     log.Printf("File: %s\n", filepath.Base(filePath))
 
-	// sanitize path to remove initial `/data` from filepath for upload
+    // sanitize path to remove initial `/data` from filepath for upload
     sanitizedPath := filePath[5:len(filePath)]
 
     // object name is in the format of: <machine_hostname>-<instance_id>/path/to/upload/file
     obj := &storage.Object{
-    	Name: metaData.hostname + "-" + metaData.instance_id + sanitizedPath,
+        Name: metaData.hostname + "-" + metaData.instance_id + sanitizedPath,
     }
 
     // SDK should use the Google service account for auth creds
-	result, err := service.Objects.Insert(bucket, obj).Media(file).Do()
+    result, err := service.Objects.Insert(bucket, obj).Media(file).Do()
 
-	if err != nil {
-		log.Printf("Error encountered. Unable to upload to GCS... ", err)
-	} else {
-		log.Printf("Successfully uploaded object:\n %v\n to GCS at location:\n %v\n\n", result.Name, result.SelfLink)
-	}
-	file.Close()
+    if err != nil {
+        log.Printf("Error encountered. Unable to upload to GCS... ", err)
+    } else {
+        log.Printf("Successfully uploaded object:\n %v\n to GCS at location:\n %v\n\n", result.Name, result.SelfLink)
+    }
+    file.Close()
 }
