@@ -58,7 +58,7 @@ func isDirectory(path string) bool {
 }
 
 /**
- * Recursively determines if the path contains a 'snapshots' or
+ * Determines if the path contains a 'snapshots' or
  * 'backups' directory in it.
  * @param { string }  - the file path
  */
