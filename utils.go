@@ -3,8 +3,7 @@ package main
 import (
     "log"
     "os"
-    "path"
-    "path/filepath"
+    "strings"
 )
 
 const (
@@ -64,17 +63,5 @@ func isDirectory(path string) bool {
  * @param { string }  - the file path
  */
 func isInSnapshotOrBackup(fpath string) bool {
-    fpath = filepath.Dir(fpath)
-
-    fpathBase := path.Base(fpath)
-
-    if fpathBase == "." {
-        return false
-    }
-
-    if fpathBase == "snapshots" || fpathBase == "backups" {
-        return true
-    }
-
-    return isInSnapshotOrBackup(fpath)
+    return strings.Contains(fpath, "/snapshots/") || strings.Contains(fpath, "/backups/")
 }
