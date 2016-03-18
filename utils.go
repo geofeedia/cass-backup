@@ -58,10 +58,10 @@ func isDirectory(path string) bool {
 }
 
 /**
- * Determines if the path contains a 'snapshots' or
- * 'backups' directory in it.
+ * Determines if the path is a 'snapshots' or
+ * 'backups' directory.
  * @param { string }  - the file path
  */
-func isInSnapshotOrBackup(fpath string) bool {
-    return strings.Contains(fpath, "/snapshots/") || strings.Contains(fpath, "/backups/")
+func isSnapshotOrBackupDir(fpath string) bool {
+    return (strings.Contains(fpath, "/snapshots") || strings.Contains(fpath, "/backups")) && isDirectory(fpath)
 }
