@@ -11,7 +11,11 @@ import (
     "github.com/rjeczalik/notify"
 )
 
-const ROOT_DATA_DIR = "/data"
+const (
+    ROOT_DATA_DIR    = "/data"
+    DELETE_MASK      = 512
+    SELF_DELETE_MASK = 1024 
+)
 
 var (
     metaData    = new(CommonMetadata)
@@ -60,7 +64,7 @@ func main() {
             mask := evt.Sys().(*syscall.InotifyEvent).Mask
             
             // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
-            if mask == 512 || mask == 1024 {
+            if mask == DELETE_MASK || mask == SELF_DELETE_MASK {
                 // remove from dirs to watch
                 log.Printf("Deleting watched path at: %s\n", evt.Path())
                 delete(dirsToWatch, evt.Path())
@@ -172,6 +176,12 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
         // listen for events that we need to upload
         // and block when necessary
         evt := <-channel
+        mask := evt.Sys().(*syscall.InotifyEvent).Mask
+        // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
+        if mask == DELETE_MASK || mask == SELF_DELETE_MASK {
+            continue
+        }
+
         log.Println("evt to upload", evt)
 
         var fpath = evt.Path()
