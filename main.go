@@ -133,6 +133,7 @@ func updateWatchedFiles() {
 func updateWatchers(watchChan chan<- notify.EventInfo, events []notify.Event, metaData *CommonMetadata) {
     var shouldDelete = false
     for key, value := range dirsToWatch {
+        shouldDelete = false
         if len(events) == 0 {
             log.Println("No listen events provided. No watchers set up.")
         }
