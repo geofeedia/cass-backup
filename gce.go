@@ -18,8 +18,8 @@ const (
  * Uploads the file at the specified path to a GCS bucket as specified 
  * by the environment variable BUCKET_NAME
  * 
- * @param  { string } filePath - The path to the file to upload
- * @param  { *CommonMetadata } metaData - The instance metadata
+ * @param  { string          } filePath - The path to the file to upload
+ * @param  { *CommonMetadata } metaData - The cloud instance metadata
  */
 func uploadToGcs(filePath string, metaData *CommonMetadata) {
     var bucket = getBucket()

@@ -12,12 +12,12 @@ const (
 )
 
 /**
- * Returns the region we should be operating.
+ * Returns the region we should be operating in.
  * Either from environment variable or defaults to `us-east-1`
  * @return { string }
  */
 func getRegion() string {
-    region := os.Getenv(REGION_ENV_VAR)
+    var region = os.Getenv(REGION_ENV_VAR)
     if region == "" {
         // default to us-east-1 for amazon. google doesn't use the region
         region = "us-east-1"
@@ -34,7 +34,7 @@ func getRegion() string {
  * @return { string }
  */
 func getBucket() string {
-    bucket := os.Getenv(BUCKET_ENV_VAR)
+    var bucket = os.Getenv(BUCKET_ENV_VAR)
     if bucket == "" {
         log.Fatal("Unable to determine bucket name. Make sure BUCKET_NAME environment variable is set.")
     }
@@ -45,7 +45,8 @@ func getBucket() string {
 /**
  * Determines if path is to a file or a directory.
  * If unable to locate path (i.e. it's been deleted, then we return true)
- * @param { string }  - the file path
+ * @param  { string } - the file path
+ * @return {  bool  }
  */
 func isDirectory(path string) bool {
     fileInfo, err := os.Stat(path)
@@ -60,7 +61,8 @@ func isDirectory(path string) bool {
 /**
  * Determines if the path is a 'snapshots' or
  * 'backups' directory.
- * @param { string }  - the file path
+ * @param  { string } - the file path
+ * @return {  bool  }
  */
 func isSnapshotOrBackupDir(fpath string) bool {
     return (strings.Contains(fpath, "/snapshots") || strings.Contains(fpath, "/backups")) && isDirectory(fpath)

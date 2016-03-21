@@ -17,7 +17,7 @@ import (
  * as indicated by the environment variables BUCKET_NAME and REGION
  * 
  * @param  { string          } filePath - The path to the file to upload
- * @param  { *CommonMetadata } metaData - The instance metadata
+ * @param  { *CommonMetadata } metaData - The cloud instance metadata
  */
 func uploadToS3(filePath string, metaData *CommonMetadata) {
     var bucket = getBucket()
