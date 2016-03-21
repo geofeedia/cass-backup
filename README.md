@@ -43,7 +43,7 @@ Currently listening on `syscall.IN_MOVED_TO, syscall.IN_DELETE, syscall.IN_DELET
 
 The DELETE events are for removing watchers for when snapshots and backups are cleaned up.
 
-The key will be in the form of `<machine_hostname>-<instance_id>/path/to/uploaded/file`
+The key will be in the form of `<machine_hostname>-<instance_id>/path/to/file/to/upload`
 
 #### Expected environment variables
 ```no-highlight

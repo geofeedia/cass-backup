@@ -5,6 +5,7 @@ import (
     "time"
     "syscall"
     "path/filepath"
+    "strings"
     "os"
     
     "github.com/rjeczalik/notify"
@@ -59,22 +60,14 @@ func main() {
             mask := evt.Sys().(*syscall.InotifyEvent).Mask
             
             // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
-            if  mask == 512 || mask == 1024 {
-                // stop removes any watchers
-                // only way to remove a watched path is by 
-                // stopping and then recreating watchers.
-                // Limitation of the library.
-                notify.Stop(watchChan)
-
+            if mask == 512 || mask == 1024 {
                 // remove from dirs to watch
-                log.Printf("Deleting watched path at: \n%s", evt.Path())
+                log.Printf("Deleting watched path at: %s\n", evt.Path())
                 delete(dirsToWatch, evt.Path())
-                
-                // update watch list
-                updateWatchers(watchChan, events, metaData)
                 continue
             }
 
+            log.Printf("uploading file at ", evt.Path())
             // pump upload channel
             uploadChan <- evt
         }
@@ -82,6 +75,11 @@ func main() {
 
     // every 5 minutes check for new /data/**/snapshots/ or /data/**/backups/
     for {
+        // stop removes any watchers
+        // only way to remove a watched path is by 
+        // stopping and then recreating watchers.
+        // Limitation of the library.
+        notify.Stop(watchChan)
         updateWatchedFiles()
         updateWatchers(watchChan, events, metaData)
         time.Sleep(time.Second * 300)        
@@ -89,24 +87,34 @@ func main() {
 }
 
 /**
+  * function that will be called upon the walking of each file
+  * in updateWatchedFiles()
+  * @param { string      } - path to the file or directory in the filepath.Walk(...) func
+  * @param { os.FileInfo } - info about the specific file
+  * @param { error       } - the error passed via the filepath.Walk(...)
+  */
+ func walkDirFunc(fpath string, f os.FileInfo, err error) error {
+     if isSnapshotOrBackupDir(fpath) == true {
+         // only add it if doesn't already exist
+         // i.e. if the key,value pair doesn't exist
+         // since requesting a key that doesn't exist
+         // will return a zero value for the specific data
+         // type which for strings is an empty zero 
+         // length string
+         if len(dirsToWatch[fpath]) == 0 {
+            log.Printf("Watching path at: %s", fpath)
+            dirsToWatch[fpath] = fpath
+         }
+     }
+     return nil
+ }
+
+/**
  * updates directories to watch by recursively
  * looking down from a root directory in this case '/data'
  */
 func updateWatchedFiles() {
-    err := filepath.Walk(ROOT_DATA_DIR, func(fpath string, f os.FileInfo, err error) error {
-        if isSnapshotOrBackupDir(fpath) == true {
-            // only add it if doesn't already exist
-            // i.e. if the key,value pair doesn't exist
-            // since requesting a key that doesn't exist
-            // will return a zero value for the specific data
-            // type which for strings is an empty zero 
-            // length string
-            if len(dirsToWatch[fpath]) == 0 {
-                dirsToWatch[fpath] = fpath
-            }
-        }
-        return nil
-    })
+    err := filepath.Walk(ROOT_DATA_DIR, walkDirFunc)
     if err != nil {
         log.Fatal("Error trying to walk directories at root: ", ROOT_DATA_DIR)
     }
@@ -119,7 +127,8 @@ func updateWatchedFiles() {
  * @param  { *CommonMetadata         } - cloud metadata
  */
 func updateWatchers(watchChan chan<- notify.EventInfo, events []notify.Event, metaData *CommonMetadata) {
-    for _, value := range dirsToWatch {
+    var shouldDelete = false
+    for key, value := range dirsToWatch {
         if len(events) == 0 {
             log.Println("No listen events provided. No watchers set up.")
         }
@@ -127,9 +136,26 @@ func updateWatchers(watchChan chan<- notify.EventInfo, events []notify.Event, me
         // loop over each event and add to the watcher
         for i := 0; i < len(events); i++ {
             err := notify.Watch(value, watchChan, events[i])
+
             if err != nil {
-                log.Println("Unable to watch directory at ", value)
-                log.Fatal(err)
+                var errStr = err.Error()
+                if strings.Contains(errStr, "no such file or directory") {
+                    log.Printf("No such file at %s to watch. Okay.. moving on.", errStr)
+                    shouldDelete = true
+                    break
+                } else {
+                    log.Println("Unable to watch directory at ", value)
+                    log.Fatal(err)
+                }
+            }
+        }
+
+        if shouldDelete == true {
+            // we know that directory doesn't exist so let's delete it from
+            // map of directories to watch
+            if len(dirsToWatch[key]) != 0 {
+                delete(dirsToWatch, key)
+                log.Println("Deleted watcher for file at: ", key)
             }
         }
     }
@@ -146,6 +172,7 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
         // listen for events that we need to upload
         // and block when necessary
         evt := <-channel
+        log.Println("evt to upload", evt)
 
         var fpath = evt.Path()
         // if we have a directory then we need to upload
@@ -153,9 +180,9 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
         if isDirectory(fpath) == true {
             // wait a little while to avoid missing any
             // files being created
-            // 7 seconds was chosen arbitrarily high. No experiementing
+            // 10 seconds was chosen arbitrarily high. No experimenting
             // was done for shorter times.
-            time.Sleep(time.Second * 7)
+            time.Sleep(time.Second * 10)
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
                 if isDirectory(fpath) == false {
@@ -163,6 +190,8 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
                 }
                 return nil
             })
+        } else {
+            uploadToCloud(fpath, cloud)
         }
 
     }

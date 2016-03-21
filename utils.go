@@ -17,7 +17,7 @@ const (
  * @return { string }
  */
 func getRegion() string {
-    var region = os.Getenv(REGION_ENV_VAR)
+    region := os.Getenv(REGION_ENV_VAR)
     if region == "" {
         // default to us-east-1 for amazon. google doesn't use the region
         region = "us-east-1"
@@ -34,7 +34,7 @@ func getRegion() string {
  * @return { string }
  */
 func getBucket() string {
-    var bucket = os.Getenv(BUCKET_ENV_VAR)
+    bucket := os.Getenv(BUCKET_ENV_VAR)
     if bucket == "" {
         log.Fatal("Unable to determine bucket name. Make sure BUCKET_NAME environment variable is set.")
     }
