@@ -15,26 +15,14 @@ Inspired by https://github.com/JeremyGrosser/tablesnap
 * ~~Should upload full and incremental snapshot files~~
 
 #### Overview
-Initially we thought we could set up recursive watchers on the file tree rooted at `/data`, but
-we realized there are unavoidable race conditions when doing this in that there is a possibility
-that a subdirectory is created, which in turn triggers a watcher to be setup, but there could be
-files and/or subdirectories within that subdirectory that trigger events prior to the watcher 
-being completely initialized. Therefore we could not confidently say that we were listening on
-**all** incoming file system events.
-
-Our current implementation reverts to a less reactionary model and to a more polling type model.
-Every 5 minutes and at boot we recursively scan (i.e. poll) from the root `/data` directory for any new
-directory paths that include either `/data/**/snapshots/**` or `/data/**/backups/**`. Any paths found 
-containing either of those directories is added immediately to a list of directories we want to watch and 
-begin listening for file system events. To keep the number of watchers from growing too large we listen 
-for delete events at which point we remove those paths from the watch list. Then as [`inotify`](http://man7.org/linux/man-pages/man7/inotify.7.html)
-events that pass a certain set of criteria:
+Currently listens on `/data/**/` recursively for a subset of [`inotify`](http://man7.org/linux/man-pages/man7/inotify.7.html)
+events and as we receive them if they pass a certain set of criteria:
 
 	1. It's either in the `/data/**/snapshots/` or `/data/**/backups/` directories
 	2. It's not a directory
 
-then we upload those files to a cloud bucket either S3 or GCS depending on which cloud you are currently
-running the binary in.
+we upload those files to a cloud bucket in either S3 or GCS depending on which cloud you are currently
+operating in.
 
 #### Caveats
 Currently only supports Linux.

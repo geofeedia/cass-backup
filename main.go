@@ -6,6 +6,7 @@ import (
     "syscall"
     "os"
     "path/filepath"
+    "strings"
     
     "github.com/rjeczalik/notify"
 )
@@ -103,8 +104,17 @@ func setupWatcher(channel chan<- notify.EventInfo, dirsToWatch []string, events 
         for j := 0; j < len(events); j++ {
             err := notify.Watch(dirsToWatch[i], channel, events[j])
             if err != nil {
-                log.Println("Unable to watch directory at ", dirsToWatch[i])
-                log.Fatal(err)
+                var errStr = err.Error()
+                // specific error message from github.com/rjeczalik/notify library
+                // that we are choosing to ignore since it doesn't break anything
+                if strings.Contains(errStr, "no such file or directory") {
+                    log.Printf("No such file at %s to watch. Okay... moving on.", errStr)
+                    break;
+                // die on all other errors
+                } else {
+                    log.Println("Unable to watch directory at ", dirsToWatch[i])
+                    log.Fatal(err)
+                }
             }
         }
     }
@@ -132,10 +142,13 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
         // if we have a directory then we need to upload
         // its contents
         if isDirectory(fpath) == true {
-            // wait a little while to avoid missing any
-            // files being created
+            // We do this to cover the race condition where a watcher is not
+            // set up in time to catch any events from that directory.
+            // There is a possibility that uploads will occur twice, but at the
+            // moment that's not a problem since it's already so fast.
+            // 
             // 3 seconds was chosen arbitrarily. No experimenting
-            // was done for shorter times.
+            // was done for different times.
             time.Sleep(time.Second * 3)
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
