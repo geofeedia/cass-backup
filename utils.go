@@ -4,6 +4,7 @@ import (
     "log"
     "os"
     "strings"
+    "path/filepath"
 )
 
 const (
@@ -66,4 +67,22 @@ func isDirectory(path string) bool {
  */
 func isSnapshotOrBackupDir(fpath string) bool {
     return (strings.Contains(fpath, "/snapshots") || strings.Contains(fpath, "/backups")) && isDirectory(fpath)
+}
+
+/**
+ * Determines if path is under one of the `/data/system*` directories
+ * @param { string } - the file path
+ * @return { bool  }
+ */
+func isCassSystemDir(fpath string) bool {
+    return strings.Contains(fpath, "/data/system")
+}
+
+/**
+ * Determines if file is of type DB and a file
+ * @param { string } - the file path
+ * @return { bool  }
+ */
+func hasDBExtension(fpath string) bool {
+    return filepath.Ext(fpath) == ".db" && !isDirectory(fpath)
 }

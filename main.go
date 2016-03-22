@@ -77,9 +77,9 @@ func main() {
         // working directory files.
         // we only want /data/keyspace/**/table/backups/* and /data/keyspace/**/table/snapshots/*
         // 
-        // filepath.Dir strips the file off the path and
-        // path.Base returns the last directory
-        if isSnapshotOrBackupDir(fpath) == true {
+        // ignores any files under the /data/system* directories as well
+        // 
+        if isSnapshotOrBackupDir(fpath) == true && isCassSystemDir(fpath) == false {
             // pump events we want to upload to the 
             // upload channel
             uploadChan <- evt    
@@ -153,7 +153,9 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
                 if isDirectory(fpath) == false {
-                    uploadToCloud(fpath, cloud)
+                    if hasDBExtension(fpath) == true {
+                        uploadToCloud(fpath, cloud)
+                    }
                 }
                 return nil
             })
