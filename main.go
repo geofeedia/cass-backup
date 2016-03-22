@@ -153,7 +153,7 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
                 if isDirectory(fpath) == false {
-                    if hasDBExtension(fpath) == true {
+                    if shouldUploadFile(fpath) == true {
                         uploadToCloud(fpath, cloud)
                     }
                 }

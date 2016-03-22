@@ -79,10 +79,14 @@ func isCassSystemDir(fpath string) bool {
 }
 
 /**
- * Determines if file is of type DB and a file
+ * Determines if file has an extension of .db, is a file,
+ * and is not the "temp.db" file since that breaks 
+ * restoring the backups if it is present.
  * @param { string } - the file path
  * @return { bool  }
  */
-func hasDBExtension(fpath string) bool {
-    return filepath.Ext(fpath) == ".db" && !isDirectory(fpath)
+func shouldUploadFile(fpath string) bool {
+    return filepath.Ext(fpath) == ".db" &&
+         !isDirectory(fpath) &&
+         !strings.Contains(fpath, "/tmp.db")
 }
