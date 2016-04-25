@@ -72,6 +72,7 @@ func main() {
         }
 
         var fpath = evt.Path()
+        log.Printf("File path to watch: %s", fpath)
 
         // don't upload files in main table directory aka
         // working directory files.
@@ -82,6 +83,7 @@ func main() {
         if isSnapshotOrBackupDir(fpath) == true && isCassSystemDir(fpath) == false {
             // pump events we want to upload to the 
             // upload channel
+            log.Printf("File path to upload: %s", fpath)
             uploadChan <- evt    
         }
     }
@@ -145,11 +147,10 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
             // We do this to cover the race condition where a watcher is not
             // set up in time to catch any events from that directory.
             // There is a possibility that uploads will occur twice, but at the
-            // moment that's not a problem since it's already so fast.
+            // moment that's not a problem since it's fast enough.
             // 
-            // 3 seconds was chosen arbitrarily. No experimenting
-            // was done for different times.
-            time.Sleep(time.Second * 3)
+            // 10 seconds was chosen arbitrarily
+            time.Sleep(time.Second * 10)
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
                 if isDirectory(fpath) == false {

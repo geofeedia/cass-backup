@@ -80,7 +80,7 @@ func isCassSystemDir(fpath string) bool {
 
 /**
  * Determines if file has an extension of .db, is a file,
- * and is not the "temp.db" file since that breaks 
+ * and is not the "tmp.db" file since that breaks 
  * restoring the backups if it is present.
  * @param { string } - the file path
  * @return { bool  }
