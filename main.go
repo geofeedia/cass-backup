@@ -29,7 +29,7 @@ func main() {
     select {
     case cmdd := <-channel:
         metaData = cmdd 
-    case <-time.After(time.Second * 2):
+    case <-time.After(time.Second * 5):
         log.Fatal("Unable to determine cloud provider. Currently only checking for GCE and AWS.")
     }
 
@@ -64,7 +64,9 @@ func main() {
         // and recreate watchers to avoid any leaks
         var mask = evt.Sys().(*syscall.InotifyEvent).Mask
         // syscall.IN_DELETE and syscall.IN_DELETE_SELF bit masks
-        if  mask == DELETE_MASK || mask == SELF_DELETE_MASK {
+        if mask == SELF_DELETE_MASK { continue }
+        if  mask == DELETE_MASK {
+            log.Printf("delete event received: %v", mask)
             // stop removes any watchers
             notify.Stop(watchChan)
             setupWatcher(watchChan, dirsToWatch, events)
@@ -79,12 +81,11 @@ func main() {
         // we only want /data/keyspace/**/table/backups/* and /data/keyspace/**/table/snapshots/*
         // 
         // ignores any files under the /data/system* directories as well
-        // 
-        if isSnapshotOrBackupDir(fpath) == true && isCassSystemDir(fpath) == false {
+        if isInSnapshotOrBackupDir(fpath) == true && isCassSystemDir(fpath) == false {
             // pump events we want to upload to the 
             // upload channel
             log.Printf("File path to upload: %s", fpath)
-            uploadChan <- evt    
+            uploadChan <- evt
         }
     }
 }
@@ -143,7 +144,12 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
         var fpath = evt.Path()
         // if we have a directory then we need to upload
         // its contents
-        if isDirectory(fpath) == true {
+        var err, isDir = isDirectory(fpath)
+        if err != nil {
+            continue
+        }
+
+        if isDir == true {
             // We do this to cover the race condition where a watcher is not
             // set up in time to catch any events from that directory.
             // There is a possibility that uploads will occur twice, but at the
@@ -153,10 +159,11 @@ func upload(channel <-chan notify.EventInfo, metaData *CommonMetadata) {
             time.Sleep(time.Second * 10)
             filepath.Walk(fpath, func(fpath string, f os.FileInfo, err error) error {
                 // upload all files to either s3 or gcs
-                if isDirectory(fpath) == false {
-                    if shouldUploadFile(fpath) == true {
-                        uploadToCloud(fpath, cloud)
-                    }
+                err, isDir = isDirectory(fpath)
+                if err != nil { return nil }
+
+                if isDir == false && shouldUploadFile(fpath) == true {
+                    uploadToCloud(fpath, cloud)
                 }
                 return nil
             })

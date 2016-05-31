@@ -4,6 +4,7 @@ import (
     "log"
     "os"
     "strings"
+    "errors"
     "path/filepath"
 )
 
@@ -45,28 +46,28 @@ func getBucket() string {
 
 /**
  * Determines if path is to a file or a directory.
- * If unable to locate path (i.e. it's been deleted, then we return true)
+ * If unable to locate path (i.e. it's been deleted, then we return nil)
  * @param  { string } - the file path
  * @return {  bool  }
  */
-func isDirectory(path string) bool {
+func isDirectory(path string) (error, bool) {
     fileInfo, err := os.Stat(path)
     if err != nil {
         log.Printf("Unable to determine if path to file or directory exists: %s", path)
-        return true
+        return errors.New("Unable to determine if path to file or directory exists"), false
     }
 
-    return fileInfo.IsDir()
+    return nil, fileInfo.IsDir()
 }
 
 /**
- * Determines if the path is a 'snapshots' or
+ * Determines if the path contains a 'snapshots' or
  * 'backups' directory.
  * @param  { string } - the file path
  * @return {  bool  }
  */
-func isSnapshotOrBackupDir(fpath string) bool {
-    return (strings.Contains(fpath, "/snapshots") || strings.Contains(fpath, "/backups")) && isDirectory(fpath)
+func isInSnapshotOrBackupDir(fpath string) bool {
+    return strings.Contains(fpath, "/snapshots") || strings.Contains(fpath, "/backups")
 }
 
 /**
@@ -86,7 +87,9 @@ func isCassSystemDir(fpath string) bool {
  * @return { bool  }
  */
 func shouldUploadFile(fpath string) bool {
+    var err, isDir = isDirectory(fpath)
+    if err != nil { return false }
     return filepath.Ext(fpath) == ".db" &&
-         !isDirectory(fpath) &&
+         !isDir &&
          !strings.Contains(fpath, "/tmp.db")
 }
