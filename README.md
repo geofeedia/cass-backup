@@ -1,5 +1,11 @@
 # Cass-Backup
 
+## DISCLAIMER
+Unfortunately this does not currently work as expected. The use of `inotify` watchers cannot keep up with the
+rate and volume of `inotify` events generated from running `nodetool snapshot` and `nodetool repair` for
+Cassandra. This is due to the inherent race condition in watching `inotify` events in that a watcher cannot
+be created in time before an event (think writing a table snapshot to disk) is fired.
+
 ### Backup tool for Cassandra
 
 #### Credits
